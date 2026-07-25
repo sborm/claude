@@ -41,6 +41,7 @@
   --border-strong: rgba(35,41,34,0.28);
   --shadow-color: 24,28,20;
   --paper-grain: rgba(35,41,34,0.035);
+  --on-brass: #fdf8ef;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -61,6 +62,7 @@
     --border-strong: rgba(233,227,211,0.24);
     --shadow-color: 0,0,0;
     --paper-grain: rgba(233,227,211,0.04);
+    --on-brass: #171c24;
     color-scheme: dark;
   }
 }
@@ -69,14 +71,14 @@
   --fog: #3c4757; --ink: #e9e3d3; --muted: #97a0ac; --faint: #6b7480;
   --brass: #cf9f4f; --brass-strong: #e7b968; --verdigris: #6bac9e; --seal: #dd8f63;
   --border: rgba(233,227,211,0.13); --border-strong: rgba(233,227,211,0.24);
-  --shadow-color: 0,0,0; --paper-grain: rgba(233,227,211,0.04); color-scheme: dark;
+  --shadow-color: 0,0,0; --paper-grain: rgba(233,227,211,0.04); --on-brass: #171c24; color-scheme: dark;
 }
 :root[data-theme="light"] {
   --void: #eef1ec; --panel: #ffffff; --panel-2: #f3f6ef; --panel-3: #e7ebe2;
   --fog: #c7cdc0; --ink: #232922; --muted: #5c6358; --faint: #8a8f83;
   --brass: #8a6024; --brass-strong: #6e4c1a; --verdigris: #2c6a5c; --seal: #9c3f28;
   --border: rgba(35,41,34,0.15); --border-strong: rgba(35,41,34,0.28);
-  --shadow-color: 24,28,20; --paper-grain: rgba(35,41,34,0.035); color-scheme: light;
+  --shadow-color: 24,28,20; --paper-grain: rgba(35,41,34,0.035); --on-brass: #fdf8ef; color-scheme: light;
 }
 
 * { box-sizing: border-box; }
@@ -125,6 +127,16 @@ button { cursor: pointer; }
 .stat { text-align: right; }
 .stat__num { font-variant-numeric: tabular-nums; font-size: 1.35rem; font-weight: 600; color: var(--brass); font-family: 'Cormorant Garamond', Georgia, serif; }
 .stat__label { display: block; font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); margin-top: 0.1rem; }
+
+.view-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.view-tab {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.42rem 0.85rem; border-radius: 100px; border: 1px solid var(--border-strong);
+  background: none; color: var(--muted); font-size: 0.82rem;
+}
+.view-tab svg { width: 14px; height: 14px; }
+.view-tab:hover { border-color: var(--brass); color: var(--ink); }
+.view-tab.is-active { background: var(--brass); border-color: var(--brass); color: var(--on-brass); }
 
 .legend-toggle {
   display: inline-flex; align-items: center; gap: 0.4rem;
@@ -267,6 +279,71 @@ footer .inner { max-width: 1180px; margin: 0 auto; display: flex; justify-conten
 footer p { margin: 0; font-size: 0.78rem; color: var(--faint); max-width: 56ch; }
 .reset-link { background: none; border: none; color: var(--faint); font-size: 0.78rem; text-decoration: underline; text-underline-offset: 3px; padding: 0; }
 .reset-link:hover { color: var(--seal); }
+
+/* ---------- Fallakten-Wand ---------- */
+.case-toolbar { display: flex; gap: 0.6rem 1rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.6rem; }
+.case-select {
+  background: var(--panel-2); border: 1px solid var(--border-strong); color: var(--ink);
+  padding: 0.45rem 0.7rem; border-radius: 8px; font-size: 0.82rem; font-family: inherit;
+}
+.stamp-pills { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.stamp-pill { padding: 0.4rem 0.85rem; border-radius: 100px; border: 1px solid var(--border-strong); background: none; color: var(--muted); font-size: 0.78rem; }
+.stamp-pill:hover { color: var(--ink); }
+.stamp-pill.is-active { border-color: var(--brass); color: var(--ink); background: var(--panel-3); }
+
+.cluster { margin-bottom: 2.1rem; }
+.cluster__head { font-size: 0.74rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--faint); margin: 0 0 0.8rem 1.55rem; }
+.cluster__thread { position: relative; padding-left: 1.55rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.cluster__thread::before { content: ""; position: absolute; left: 5px; top: 8px; bottom: 8px; width: 1.5px; background: var(--border-strong); }
+
+.case-card { position: relative; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; }
+.case-card::before {
+  content: ""; position: absolute; left: -1.55rem; top: 1.15rem; width: 9px; height: 9px; border-radius: 50%;
+  background: var(--panel); border: 1.5px solid var(--border-strong); transition: all 300ms ease;
+}
+.case-card.is-touched::before { border-color: var(--brass); background: var(--brass); }
+.case-card__head { display: flex; gap: 0.7rem; align-items: flex-start; width: 100%; text-align: left; background: none; border: none; color: inherit; padding: 0.85rem 1rem; }
+.case-card__main { flex: 1; min-width: 0; }
+.case-card__eyebrow { font-size: 0.7rem; color: var(--faint); margin: 0 0 0.3rem; }
+.case-stamp-badge {
+  display: inline-block; font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600; font-size: 0.68rem;
+  letter-spacing: 0.08em; text-transform: uppercase; padding: 0.12rem 0.5rem; border: 1.5px solid currentColor;
+  border-radius: 3px; transform: rotate(-2.5deg); margin-bottom: 0.4rem;
+}
+.case-stamp-badge--geklaert { color: var(--verdigris); }
+.case-stamp-badge--teilweise { color: var(--brass); }
+.case-stamp-badge--wartet { color: var(--faint); }
+.case-card__title { margin: 0; font-size: 0.95rem; line-height: 1.45; }
+.case-card__chevron { flex: none; width: 15px; height: 15px; color: var(--faint); margin-top: 0.35rem; transition: transform 220ms ease; }
+.case-card.is-open .case-card__chevron { transform: rotate(90deg); }
+
+.case-body { display: none; padding: 0 1rem 1.15rem; }
+.case-card.is-open .case-body { display: block; }
+.case-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem; }
+@media (max-width: 640px) { .case-grid { grid-template-columns: 1fr; } }
+.stamp-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.stamp-btn { flex: 1; min-width: 150px; padding: 0.5rem 0.7rem; border-radius: 8px; border: 1px solid var(--border-strong); background: var(--panel); color: var(--muted); font-size: 0.8rem; text-align: center; }
+.stamp-btn--geklaert.is-selected { border-color: var(--verdigris); color: var(--verdigris); background: color-mix(in srgb, var(--verdigris) 14%, var(--panel)); }
+.stamp-btn--teilweise.is-selected { border-color: var(--brass); color: var(--brass); background: color-mix(in srgb, var(--brass) 14%, var(--panel)); }
+.stamp-btn--wartet.is-selected { border-color: var(--faint); color: var(--ink); background: var(--panel-3); }
+
+/* ---------- Sprintkapseln ---------- */
+.capsule-intro { border: 1px dashed var(--border-strong); border-radius: 12px; padding: 0.9rem 1.1rem; margin-bottom: 1.6rem; color: var(--muted); font-size: 0.88rem; max-width: 68ch; }
+.capsule-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+.capsule {
+  position: relative; border-radius: 18px; border: 1px solid var(--border-strong); background: var(--panel-2);
+  padding: 1.05rem 1.1rem; overflow: hidden; transition: transform 160ms ease, border-color 160ms ease;
+}
+.capsule:hover { transform: translateY(-2px); border-color: var(--brass); }
+.capsule.is-touched { border-color: var(--verdigris); }
+.capsule__glow { position: absolute; inset: 0; background: radial-gradient(circle at 25% 15%, color-mix(in srgb, var(--brass) 16%, transparent), transparent 62%); pointer-events: none; }
+.capsule__head { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; position: relative; margin-bottom: 0.55rem; }
+.capsule__meta { font-size: 0.72rem; color: var(--faint); position: relative; margin: 0 0 0.4rem; }
+.capsule__punkt { margin: 0; font-size: 0.94rem; line-height: 1.42; position: relative; }
+.capsule__reassure { margin: 0.65rem 0 0; font-size: 0.78rem; color: var(--muted); font-style: italic; position: relative; }
+.capsule__detail { margin-top: 0.75rem; position: relative; }
+.capsule__open-btn { position: relative; background: none; border: 1px solid var(--border-strong); color: var(--brass); border-radius: 100px; padding: 0.35rem 0.8rem; font-size: 0.78rem; margin-top: 0.7rem; }
+.capsule__open-btn:hover { border-color: var(--brass); }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -315,11 +392,24 @@ footer p { margin: 0; font-size: 0.78rem; color: var(--faint); max-width: 56ch; 
       <div class="stat-strip" id="statStrip"></div>
     </div>
     <div class="topbar__inner" style="padding-top:0;padding-bottom:0.7rem;">
+      <div class="view-tabs" id="viewTabs">
+        <button class="view-tab" data-top="atlas">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5 5-2z"/></svg>
+          Zonen-Atlas
+        </button>
+        <button class="view-tab" data-top="fallakten">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="1.5"/><path d="M3.5 9h17M8 5.5V4M16 5.5V4"/></svg>
+          Fallakten-Wand
+        </button>
+        <button class="view-tab" data-top="kapseln">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M7 12a5 5 0 0110 0v3a5 5 0 01-10 0v-3z"/><path d="M7 12h10"/></svg>
+          Sprintkapseln
+        </button>
+      </div>
       <button class="legend-toggle" id="legendToggle" aria-expanded="false" aria-controls="legendPanel">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.6"/><path d="M12 11v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.1" fill="currentColor"/></svg>
-        Wie liest man die Karte?
+        Wie liest man diese Ansicht?
       </button>
-      <span></span>
     </div>
   </div>
 
@@ -347,7 +437,7 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
 (function () {
   "use strict";
 
-  var STORAGE_KEY = "zonenAtlas.matrix.v1";
+  var STORAGE_KEY = "zonenAtlas.matrix.v2";
   var TOTAL_POINTS = MATRIX.length;
 
   var ICONS = {
@@ -379,35 +469,57 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
 
   var PRIO_ORDER = "ABCDEFGHIJKLMNOP".split("");
 
+  var STAMP_LABEL = { geklaert: "Geklärt", teilweise: "Teilweise geklärt", wartet: "Wartet auf Antwort" };
+
+  var LEGENDS = {
+    atlas:
+      '<div><strong>Nebel</strong> markiert Bereiche ohne Bewegung — nicht Versagen, nur: noch nicht begonnen.</div>' +
+      '<div><strong>Kontur</strong> erscheint dort, wo eine kleinste Startaktion tatsächlich erledigt wurde — nicht bei bloßer Planung.</div>' +
+      '<div><strong>Kein Verfall.</strong> Nichts verdunkelt sich zurück, es gibt keine Streaks, keine Fristen auf dieser Karte.</div>' +
+      '<div>Zone &rarr; Wegpunkt (Unterbereich) &rarr; einzelner Punkt. Bearbeite jeweils <em>einen</em> Punkt, nicht die ganze Zone.</div>',
+    fallakten:
+      '<div>Diese Wand zeigt nur Punkte vom Typ <strong>Klärung / Bestandsaufnahme</strong> — ungeklärte Sachverhalte, keine Erledigungs-Todos.</div>' +
+      '<div>Ein <strong>Stempel</strong> ist ein Ermittlungsstand, keine Note. Kein Stempel heißt: noch nicht bearbeitet, nicht: versäumt.</div>' +
+      '<div>Der <strong>Faden</strong> links verbindet Fälle, die zum selben Unterbereich gehören — oft hängen sie sachlich zusammen.</div>' +
+      '<div>Ein gestempelter Fall zählt in Zonen-Atlas &amp; Statistik als „in Bewegung", unabhängig vom Stempel-Typ.</div>',
+    kapseln:
+      '<div>Kapseln zeigen nur kleine, hoch priorisierte (A/B), offene Punkte — keine offenen Recherchefragen.</div>' +
+      '<div>Eine Kapsel <strong>verfällt nie</strong>. Es gibt keinen Timer, keine Frist, kein Verlustrisiko beim Nichtnutzen.</div>' +
+      '<div>Wirkt eine Kapsel doch zu groß, ist das ein Signal: der Punkt gehört eher in die Fallakten-Wand als hierher.</div>'
+  };
+
   function esc(s) {
     if (s === null || s === undefined) return "";
-    return String(s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
-
-  function attrSlug(s) {
-    return esc(s).replace(/'/g, "&#39;");
-  }
+  function attrSlug(s) { return esc(s).replace(/'/g, "&#39;"); }
 
   // ---------- state ----------
   var state = loadState();
   function loadState() {
     try {
       var raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      if (raw && raw.started && raw.notes) return raw;
+      if (raw && raw.started && raw.notes) {
+        if (!raw.cases) raw.cases = {};
+        return raw;
+      }
     } catch (e) {}
-    return { started: {}, notes: {} };
+    return { started: {}, notes: {}, cases: {} };
   }
-  function saveState() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {} }
+
+  function touched(id) {
+    if (state.started[id]) return true;
+    var c = state.cases[id];
+    return !!(c && c.stamp);
   }
 
   var openSet = new Set();
 
   // ---------- data grouping ----------
+  var byId = new Map();
+  MATRIX.forEach(function (p) { byId.set(String(p.id), p); });
+
   var zones = new Map();
   MATRIX.forEach(function (p) {
     if (!zones.has(p.bereich)) zones.set(p.bereich, { name: p.bereich, points: [], subs: new Map() });
@@ -418,9 +530,19 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
   });
   var zoneList = Array.from(zones.values()).sort(function (a, b) { return b.points.length - a.points.length; });
 
-  function startedCount(points) {
+  var KLAERUNG_POINTS = MATRIX.filter(function (p) { return p.typ === "Klärung / Bestandsaufnahme"; });
+  var CAPSULE_POINTS = MATRIX.filter(function (p) { return (p.prio === "A" || p.prio === "B") && p.status === "Offen"; });
+
+  var caseClusters = new Map(); // key "bereich||unterbereich" -> {bereich, unterbereich, points}
+  KLAERUNG_POINTS.forEach(function (p) {
+    var key = p.bereich + "||" + p.unterbereich;
+    if (!caseClusters.has(key)) caseClusters.set(key, { bereich: p.bereich, unterbereich: p.unterbereich, points: [] });
+    caseClusters.get(key).points.push(p);
+  });
+
+  function touchedCount(points) {
     var n = 0;
-    for (var i = 0; i < points.length; i++) if (state.started[points[i].id]) n++;
+    for (var i = 0; i < points.length; i++) if (touched(points[i].id)) n++;
     return n;
   }
 
@@ -430,20 +552,11 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
     if (count >= 6) return "s";
     return "xs";
   }
-
   function fogOpacity(fraction) { return 0.08 + 0.82 * (1 - fraction); }
   function contourOpacity(fraction) { return Math.min(1, fraction * 1.2); }
 
-  // ---------- seeded contour generation ----------
-  function hashSeed(str) {
-    var h = 0;
-    for (var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
-    return Math.abs(h) || 1;
-  }
-  function seededRand(seed) {
-    var s = seed % 233280;
-    return function () { s = (s * 9301 + 49297) % 233280; return s / 233280; };
-  }
+  function hashSeed(str) { var h = 0; for (var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0; return Math.abs(h) || 1; }
+  function seededRand(seed) { var s = seed % 233280; return function () { s = (s * 9301 + 49297) % 233280; return s / 233280; }; }
   function contourPaths(seed, n) {
     var rand = seededRand(hashSeed(seed));
     var out = [];
@@ -459,44 +572,65 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
     }
     return out;
   }
-
   var FOG_FILTERS = ["fog0", "fog1", "fog2", "fog3"];
 
   function iconSvg(key, cls) {
     var d = ICONS[key] || ICONS.doc;
     return '<svg class="' + cls + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + "</svg>";
   }
-
   var CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
   var STAMP_MARK = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
 
-  // ---------- routing ----------
+  // ---------- top-level + atlas routing ----------
+  var currentTop = "atlas";
   var view = { type: "atlas" };
+  var caseFilterBereich = "all";
+  var caseFilterStamp = "all";
 
-  function nav(next) {
-    view = next;
+  function navTop(top) {
+    currentTop = top;
+    if (top === "atlas") view = { type: "atlas" };
+    updateTabs();
+    updateLegend();
     render();
-    var main = document.getElementById("view");
-    if (main) main.scrollIntoView({ block: "start", behavior: "auto" });
+    scrollToView();
+  }
+  function nav(next) { view = next; render(); scrollToView(); }
+  function scrollToView() { var m = document.getElementById("view"); if (m) m.scrollIntoView({ block: "start", behavior: "auto" }); }
+
+  function updateTabs() {
+    document.querySelectorAll(".view-tab").forEach(function (btn) {
+      btn.classList.toggle("is-active", btn.getAttribute("data-top") === currentTop);
+    });
+  }
+  function updateLegend() {
+    var panel = document.getElementById("legendPanel");
+    panel.querySelector(".legend-panel__body").innerHTML = LEGENDS[currentTop];
   }
 
   function render() {
     var el = document.getElementById("view");
-    if (view.type === "atlas") el.innerHTML = atlasView();
-    else if (view.type === "zone") el.innerHTML = zoneView(view.zone);
-    else el.innerHTML = waypointView(view.zone, view.sub);
+    if (currentTop === "atlas") {
+      if (view.type === "atlas") el.innerHTML = atlasView();
+      else if (view.type === "zone") el.innerHTML = zoneView(view.zone);
+      else el.innerHTML = waypointView(view.zone, view.sub);
+    } else if (currentTop === "fallakten") {
+      el.innerHTML = fallaktenView();
+    } else {
+      el.innerHTML = kapselnView();
+    }
     renderStatStrip();
   }
 
   function renderStatStrip() {
-    var started = Object.keys(state.started).filter(function (id) { return state.started[id]; }).length;
-    var zonesTouched = zoneList.filter(function (z) { return startedCount(z.points) > 0; }).length;
+    var startedTotal = MATRIX.filter(function (p) { return touched(p.id); }).length;
+    var zonesTouched = zoneList.filter(function (z) { return touchedCount(z.points) > 0; }).length;
     document.getElementById("statStrip").innerHTML =
-      '<div class="stat"><span class="stat__num">' + started + " / " + TOTAL_POINTS + '</span><span class="stat__label">Punkte in Bewegung</span></div>' +
+      '<div class="stat"><span class="stat__num">' + startedTotal + " / " + TOTAL_POINTS + '</span><span class="stat__label">Punkte in Bewegung</span></div>' +
       '<div class="stat"><span class="stat__num">' + zonesTouched + " / " + zoneList.length + '</span><span class="stat__label">Zonen angelaufen</span></div>';
   }
 
-  // ---------- views ----------
+  // ---------- shared bits ----------
   function breadcrumb(items) {
     var parts = items.map(function (it, i) {
       if (i === items.length - 1) return '<span class="current">' + esc(it.label) + "</span>";
@@ -504,35 +638,6 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
     });
     return '<nav class="breadcrumb" id="crumb">' + parts.join('<span class="sep">&rsaquo;</span>') + "</nav>";
   }
-
-  function atlasView() {
-    var tiles = zoneList.map(function (z, idx) {
-      var total = z.points.length;
-      var started = startedCount(z.points);
-      var frac = started / total;
-      var cls = sizeClass(total);
-      var paths = contourPaths(z.name, cls === "l" ? 4 : cls === "m" ? 3 : 2);
-      var pctLabel = started === 0 ? "unbetreten" : started === total ? "vollständig aufgeklart" : Math.round(frac * 100) + "% Kontur";
-      var pathMarkup = paths.map(function (d) {
-        return '<path d="' + d + '" style="opacity:' + contourOpacity(frac).toFixed(2) + '"/>';
-      }).join("");
-      return (
-        '<button class="tile size-' + cls + '" data-zone="' + attrSlug(z.name) + '" aria-label="Zone ' + attrSlug(z.name) + ", " + started + " von " + total + ' Punkten in Bewegung">' +
-          '<div class="tile__fog" style="opacity:' + fogOpacity(frac).toFixed(2) + '"></div>' +
-          '<div class="tile__mist" style="opacity:' + (0.55 * fogOpacity(frac)).toFixed(2) + ';filter:url(#' + FOG_FILTERS[idx % 4] + ')"></div>' +
-          '<svg class="tile__contours" viewBox="0 0 100 100" preserveAspectRatio="none">' + pathMarkup + "</svg>" +
-          '<div class="tile__top">' + iconSvg(ZONE_ICON[z.name] || "doc", "tile__icon") + '<span class="tile__count">' + started + "/" + total + "</span></div>" +
-          '<div class="tile__bottom"><p class="tile__name">' + esc(z.name) + '</p><span class="tile__pct">' + pctLabel + "</span></div>" +
-        "</button>"
-      );
-    }).join("");
-
-    return (
-      '<div class="view-head"><div><h1 class="font-display">Der Zonen-Atlas</h1><p class="sub">13 Zonen aus der Offene-Schleifen-Matrix. Wähle eine Zone &mdash; sie liegt im Nebel, bis irgendwo darin eine kleinste Startaktion erledigt wird.</p></div></div>' +
-      '<div class="atlas-grid">' + tiles + "</div>"
-    );
-  }
-
   function ring(frac, size) {
     size = size || 30;
     var r = size / 2 - 3;
@@ -545,14 +650,42 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
       "</svg>"
     );
   }
+  function statusChipClass(status) { return "chip chip--status-" + String(status || "").replace(/[^A-Za-zÄÖÜäöüß]/g, ""); }
+  function formatDate(d) { var pad = function (n) { return String(n).padStart(2, "0"); }; return pad(d.getDate()) + "." + pad(d.getMonth() + 1) + "." + d.getFullYear(); }
+
+  // ---------- Atlas views ----------
+  function atlasView() {
+    var tiles = zoneList.map(function (z, idx) {
+      var total = z.points.length;
+      var started = touchedCount(z.points);
+      var frac = started / total;
+      var cls = sizeClass(total);
+      var paths = contourPaths(z.name, cls === "l" ? 4 : cls === "m" ? 3 : 2);
+      var pctLabel = started === 0 ? "unbetreten" : started === total ? "vollständig aufgeklart" : Math.round(frac * 100) + "% Kontur";
+      var pathMarkup = paths.map(function (d) { return '<path d="' + d + '" style="opacity:' + contourOpacity(frac).toFixed(2) + '"/>'; }).join("");
+      return (
+        '<button class="tile size-' + cls + '" data-zone="' + attrSlug(z.name) + '" aria-label="Zone ' + attrSlug(z.name) + ", " + started + " von " + total + ' Punkten in Bewegung">' +
+          '<div class="tile__fog" style="opacity:' + fogOpacity(frac).toFixed(2) + '"></div>' +
+          '<div class="tile__mist" style="opacity:' + (0.55 * fogOpacity(frac)).toFixed(2) + ';filter:url(#' + FOG_FILTERS[idx % 4] + ')"></div>' +
+          '<svg class="tile__contours" viewBox="0 0 100 100" preserveAspectRatio="none">' + pathMarkup + "</svg>" +
+          '<div class="tile__top">' + iconSvg(ZONE_ICON[z.name] || "doc", "tile__icon") + '<span class="tile__count">' + started + "/" + total + "</span></div>" +
+          '<div class="tile__bottom"><p class="tile__name">' + esc(z.name) + '</p><span class="tile__pct">' + pctLabel + "</span></div>" +
+        "</button>"
+      );
+    }).join("");
+    return (
+      '<div class="view-head"><div><h1 class="font-display">Der Zonen-Atlas</h1><p class="sub">13 Zonen aus der Offene-Schleifen-Matrix. Wähle eine Zone &mdash; sie liegt im Nebel, bis irgendwo darin eine kleinste Startaktion erledigt wird.</p></div></div>' +
+      '<div class="atlas-grid">' + tiles + "</div>"
+    );
+  }
 
   function zoneView(zoneName) {
     var z = zones.get(zoneName);
-    if (!z) { nav({ type: "atlas" }); return ""; }
+    if (!z) { navTop("atlas"); return ""; }
     var subs = Array.from(z.subs.values()).sort(function (a, b) { return b.points.length - a.points.length; });
     var rows = subs.map(function (s) {
       var total = s.points.length;
-      var started = startedCount(s.points);
+      var started = touchedCount(s.points);
       var frac = started / total;
       return (
         '<button class="waypoint-row" data-sub="' + attrSlug(s.name) + '">' +
@@ -570,13 +703,24 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
     );
   }
 
-  function statusChipClass(status) {
-    return "chip chip--status-" + String(status || "").replace(/[^A-Za-zÄÖÜäöüß]/g, "");
+  function accessPanelMarkup(p) {
+    var note = state.notes[p.id] || {};
+    var isStarted = !!state.started[p.id];
+    var startedAt = isStarted && state.started[p.id].at ? state.started[p.id].at : "";
+    return (
+      '<div class="access-field"><label for="q-' + p.id + '">Zugangsfrage (optional)</label>' +
+        '<textarea id="q-' + p.id + '" rows="2" data-field="question" data-id="' + p.id + '" placeholder="Was ist an diesem Punkt tatsächlich ungeklärt oder bemerkenswert?">' + esc(note.question || "") + "</textarea></div>" +
+      '<div class="access-field"><label for="a-' + p.id + '">Kleinste Startaktion</label>' +
+        '<input type="text" id="a-' + p.id + '" data-field="action" data-id="' + p.id + '" placeholder="Die kleinste echte Zustandsveränderung." value="' + attrSlug(note.action || "") + '"></div>' +
+      '<label class="access-toggle"><input type="checkbox" data-started="' + p.id + '"' + (isStarted ? " checked" : "") + '><span>Startaktion erledigt</span>' +
+        (startedAt ? '<span class="started-at">&mdash; aufgeklart am ' + esc(startedAt) + "</span>" : "") +
+      "</label>"
+    );
   }
 
   function waypointView(zoneName, subName) {
     var z = zones.get(zoneName);
-    if (!z) { nav({ type: "atlas" }); return ""; }
+    if (!z) { navTop("atlas"); return ""; }
     var s = z.subs.get(subName);
     if (!s) { nav({ type: "zone", zone: zoneName }); return ""; }
     var pts = s.points.slice().sort(function (a, b) {
@@ -586,10 +730,8 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
       return a.id - b.id;
     });
     var cards = pts.map(function (p) {
-      var isStarted = !!state.started[p.id];
+      var isStarted = touched(p.id);
       var isOpen = openSet.has(p.id);
-      var note = state.notes[p.id] || {};
-      var startedAt = state.started[p.id] && state.started[p.id].at ? state.started[p.id].at : "";
       return (
         '<div class="point-card' + (isStarted ? " is-started" : "") + (isOpen ? " is-open" : "") + '" data-id="' + p.id + '">' +
           '<button class="point-card__head" data-toggle="' + p.id + '">' +
@@ -601,15 +743,7 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
             "</span>" +
             '<span class="point-card__chevron">' + CHEVRON + "</span>" +
           "</button>" +
-          '<div class="access-panel">' +
-            '<div class="access-field"><label for="q-' + p.id + '">Zugangsfrage (optional)</label>' +
-              '<textarea id="q-' + p.id + '" rows="2" data-field="question" data-id="' + p.id + '" placeholder="Was ist an diesem Punkt tatsächlich ungeklärt oder bemerkenswert?">' + esc(note.question || "") + "</textarea></div>" +
-            '<div class="access-field"><label for="a-' + p.id + '">Kleinste Startaktion</label>' +
-              '<input type="text" id="a-' + p.id + '" data-field="action" data-id="' + p.id + '" placeholder="Die kleinste echte Zustandsveränderung." value="' + attrSlug(note.action || "") + '"></div>' +
-            '<label class="access-toggle"><input type="checkbox" data-started="' + p.id + '"' + (isStarted ? " checked" : "") + '><span>Startaktion erledigt</span>' +
-              (startedAt ? '<span class="started-at">&mdash; aufgeklart am ' + esc(startedAt) + "</span>" : "") +
-            "</label>" +
-          "</div>" +
+          '<div class="access-panel">' + accessPanelMarkup(p) + "</div>" +
         "</div>"
       );
     }).join("");
@@ -620,13 +754,123 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
     );
   }
 
-  // ---------- events ----------
-  function formatDate(d) {
-    var pad = function (n) { return String(n).padStart(2, "0"); };
-    return pad(d.getDate()) + "." + pad(d.getMonth() + 1) + "." + d.getFullYear();
+  // ---------- Fallakten-Wand ----------
+  function fallaktenView() {
+    var bereiche = Array.from(new Set(KLAERUNG_POINTS.map(function (p) { return p.bereich; })));
+    var options = '<option value="all">Alle Bereiche</option>' + bereiche.map(function (b) {
+      return '<option value="' + attrSlug(b) + '"' + (caseFilterBereich === b ? " selected" : "") + ">" + esc(b) + "</option>";
+    }).join("");
+
+    var stampFilters = [
+      { key: "all", label: "Alle" },
+      { key: "none", label: "Ungestempelt" },
+      { key: "geklaert", label: "Geklärt" },
+      { key: "teilweise", label: "Teilweise" },
+      { key: "wartet", label: "Wartet" }
+    ];
+    var pills = stampFilters.map(function (f) {
+      return '<button class="stamp-pill' + (caseFilterStamp === f.key ? " is-active" : "") + '" data-stampfilter="' + f.key + '">' + f.label + "</button>";
+    }).join("");
+
+    var clusters = Array.from(caseClusters.values())
+      .filter(function (c) { return caseFilterBereich === "all" || c.bereich === caseFilterBereich; })
+      .sort(function (a, b) { return b.points.length - a.points.length; });
+
+    var anyCard = false;
+    var clusterMarkup = clusters.map(function (c) {
+      var pts = c.points.filter(function (p) {
+        if (caseFilterStamp === "all") return true;
+        var stamp = state.cases[p.id] && state.cases[p.id].stamp;
+        if (caseFilterStamp === "none") return !stamp;
+        return stamp === caseFilterStamp;
+      });
+      if (!pts.length) return "";
+      anyCard = true;
+      var cards = pts.map(caseCardMarkup).join("");
+      return (
+        '<div class="cluster">' +
+          '<p class="cluster__head">' + esc(c.bereich) + " &middot; " + esc(c.unterbereich) + " &middot; " + pts.length + (pts.length === 1 ? " Fall" : " Fälle") + "</p>" +
+          '<div class="cluster__thread">' + cards + "</div>" +
+        "</div>"
+      );
+    }).join("");
+
+    return (
+      '<div class="view-head"><div><h1 class="font-display">Die Fallakten-Wand</h1><p class="sub">' + KLAERUNG_POINTS.length + ' ungeklärte Sachverhalte aus der Matrix, gruppiert nach Unterbereich. Öffne einen Fall, formuliere die Ermittlungsfrage, stemple den Stand.</p></div></div>' +
+      '<div class="case-toolbar">' +
+        '<select class="case-select" id="caseBereichSelect">' + options + "</select>" +
+        '<div class="stamp-pills">' + pills + "</div>" +
+      "</div>" +
+      (anyCard ? clusterMarkup : '<p class="empty-note">Keine Fälle für diese Filterkombination.</p>')
+    );
   }
 
+  function caseCardMarkup(p) {
+    var c = state.cases[p.id] || {};
+    var isOpen = openSet.has(p.id);
+    var isTouched = touched(p.id);
+    var stampBadge = c.stamp ? '<span class="case-stamp-badge case-stamp-badge--' + c.stamp + '">' + STAMP_LABEL[c.stamp] + "</span>" : "";
+    return (
+      '<div class="case-card' + (isTouched ? " is-touched" : "") + (isOpen ? " is-open" : "") + '" data-id="' + p.id + '">' +
+        '<button class="case-card__head" data-toggle="' + p.id + '">' +
+          '<span class="case-card__main">' +
+            '<span class="case-card__eyebrow"><span class="badge-prio">' + esc(p.prio || "?") + '</span> &nbsp;' + esc(p.status) + "</span><br>" +
+            stampBadge +
+            '<p class="case-card__title">' + esc(p.punkt) + "</p>" +
+          "</span>" +
+          '<span class="case-card__chevron">' + CHEVRON + "</span>" +
+        "</button>" +
+        '<div class="case-body">' +
+          '<div class="case-grid">' +
+            '<div class="access-field"><label>Ungeklärte Frage</label><textarea rows="2" data-cfield="frage" data-id="' + p.id + '" placeholder="Was genau ist hier offen?">' + esc(c.frage || "") + "</textarea></div>" +
+            '<div class="access-field"><label>Bekannte Fakten</label><textarea rows="2" data-cfield="fakten" data-id="' + p.id + '" placeholder="Was steht schon fest?">' + esc(c.fakten || "") + "</textarea></div>" +
+            '<div class="access-field"><label>Fehlende Information</label><textarea rows="2" data-cfield="fehlend" data-id="' + p.id + '" placeholder="Was fehlt konkret?">' + esc(c.fehlend || "") + "</textarea></div>" +
+            '<div class="access-field"><label>Nächste Ermittlungshandlung</label><textarea rows="2" data-cfield="naechste" data-id="' + p.id + '" placeholder="' + attrSlug(p.notiz || "Der nächste konkrete Schritt.") + '">' + esc(c.naechste || "") + "</textarea></div>" +
+          "</div>" +
+          '<div class="stamp-row">' +
+            '<button class="stamp-btn stamp-btn--geklaert' + (c.stamp === "geklaert" ? " is-selected" : "") + '" data-stamp="' + p.id + ':geklaert">Geklärt</button>' +
+            '<button class="stamp-btn stamp-btn--teilweise' + (c.stamp === "teilweise" ? " is-selected" : "") + '" data-stamp="' + p.id + ':teilweise">Teilweise geklärt</button>' +
+            '<button class="stamp-btn stamp-btn--wartet' + (c.stamp === "wartet" ? " is-selected" : "") + '" data-stamp="' + p.id + ':wartet">Wartet auf Antwort</button>' +
+          "</div>" +
+        "</div>" +
+      "</div>"
+    );
+  }
+
+  // ---------- Sprintkapseln ----------
+  function kapselnView() {
+    var open = CAPSULE_POINTS.filter(function (p) { return !touched(p.id); });
+    var done = CAPSULE_POINTS.filter(function (p) { return touched(p.id); });
+    var ordered = open.concat(done);
+    var cards = ordered.map(capsuleMarkup).join("");
+    return (
+      '<div class="view-head"><div><h1 class="font-display">Sprintkapseln</h1><p class="sub">' + CAPSULE_POINTS.length + ' kleine, hoch priorisierte offene Punkte (A/B). Jede Kapsel ist freiwillig nutzbar und verfällt nicht.</p></div></div>' +
+      '<div class="capsule-intro">Diese Mission ist so klein, dass du sie jetzt nutzen könntest. Sie verfällt aber nicht.</div>' +
+      '<div class="capsule-grid">' + (cards || '<p class="empty-note">Keine Kapseln in dieser Auswahl.</p>') + "</div>"
+    );
+  }
+
+  function capsuleMarkup(p) {
+    var isTouched = touched(p.id);
+    var isOpen = openSet.has(p.id);
+    return (
+      '<div class="capsule' + (isTouched ? " is-touched" : "") + (isOpen ? " is-open" : "") + '" data-id="' + p.id + '">' +
+        '<div class="capsule__glow"></div>' +
+        '<div class="capsule__head"><span class="badge-prio">' + esc(p.prio) + "</span>" + (isTouched ? '<span class="point-card__stamp" style="position:static;">' + STAMP_MARK + "</span>" : "") + "</div>" +
+        '<p class="capsule__meta">' + esc(p.bereich) + "</p>" +
+        '<p class="capsule__punkt">' + esc(p.punkt) + "</p>" +
+        (isOpen
+          ? '<div class="capsule__detail">' + accessPanelMarkup(p) + "</div>"
+          : '<button class="capsule__open-btn" data-toggle="' + p.id + '">Kapsel öffnen</button>') +
+      "</div>"
+    );
+  }
+
+  // ---------- events ----------
   document.addEventListener("click", function (e) {
+    var top = e.target.closest("[data-top]");
+    if (top) { navTop(top.getAttribute("data-top")); return; }
+
     var tile = e.target.closest("[data-zone]");
     if (tile) { nav({ type: "zone", zone: tile.getAttribute("data-zone") }); return; }
 
@@ -644,23 +888,39 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
     var toggle = e.target.closest("[data-toggle]");
     if (toggle) {
       var id = parseInt(toggle.getAttribute("data-toggle"), 10);
-      var card = toggle.closest(".point-card");
-      if (openSet.has(id)) { openSet.delete(id); card.classList.remove("is-open"); }
-      else { openSet.add(id); card.classList.add("is-open"); }
+      if (openSet.has(id)) { openSet.delete(id); } else { openSet.add(id); }
+      render();
+      var reopened = document.querySelector('[data-id="' + id + '"]');
+      if (reopened) reopened.scrollIntoView({ block: "nearest", behavior: "auto" });
+      return;
+    }
+
+    var stampFilter = e.target.closest("[data-stampfilter]");
+    if (stampFilter) { caseFilterStamp = stampFilter.getAttribute("data-stampfilter"); render(); return; }
+
+    var stampBtn = e.target.closest("[data-stamp]");
+    if (stampBtn) {
+      var parts = stampBtn.getAttribute("data-stamp").split(":");
+      var pid = parts[0], type = parts[1];
+      if (!state.cases[pid]) state.cases[pid] = {};
+      state.cases[pid].stamp = state.cases[pid].stamp === type ? null : type;
+      saveState();
+      openSet.add(parseInt(pid, 10));
+      render();
       return;
     }
 
     if (e.target.id === "legendToggle" || e.target.closest("#legendToggle")) {
       var btn = document.getElementById("legendToggle");
       var panel = document.getElementById("legendPanel");
-      var open = panel.classList.toggle("is-open");
-      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      var isOpen = panel.classList.toggle("is-open");
+      btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
       return;
     }
 
     if (e.target.id === "resetBtn") {
-      if (window.confirm("Lokalen Stand wirklich zurücksetzen? Alle markierten Startaktionen und Notizen auf diesem Gerät gehen verloren.")) {
-        state = { started: {}, notes: {} };
+      if (window.confirm("Lokalen Stand wirklich zurücksetzen? Alle markierten Startaktionen, Stempel und Notizen auf diesem Gerät gehen verloren.")) {
+        state = { started: {}, notes: {}, cases: {} };
         saveState();
         openSet.clear();
         render();
@@ -669,26 +929,40 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
     }
   });
 
+  document.addEventListener("change", function (e) {
+    var sel = e.target.closest("#caseBereichSelect");
+    if (sel) { caseFilterBereich = sel.value; render(); return; }
+
+    var id = e.target.getAttribute && e.target.getAttribute("data-started");
+    if (id) {
+      if (e.target.checked) state.started[id] = { at: formatDate(new Date()) };
+      else delete state.started[id];
+      saveState();
+      openSet.add(parseInt(id, 10));
+      render();
+    }
+  });
+
   document.addEventListener("input", function (e) {
     var field = e.target.getAttribute && e.target.getAttribute("data-field");
-    if (!field) return;
-    var id = e.target.getAttribute("data-id");
-    if (!state.notes[id]) state.notes[id] = {};
-    state.notes[id][field] = e.target.value;
-    saveState();
+    if (field) {
+      var id = e.target.getAttribute("data-id");
+      if (!state.notes[id]) state.notes[id] = {};
+      state.notes[id][field] = e.target.value;
+      saveState();
+      return;
+    }
+    var cfield = e.target.getAttribute && e.target.getAttribute("data-cfield");
+    if (cfield) {
+      var cid = e.target.getAttribute("data-id");
+      if (!state.cases[cid]) state.cases[cid] = {};
+      state.cases[cid][cfield] = e.target.value;
+      saveState();
+    }
   });
 
-  document.addEventListener("change", function (e) {
-    var id = e.target.getAttribute && e.target.getAttribute("data-started");
-    if (!id) return;
-    if (e.target.checked) state.started[id] = { at: formatDate(new Date()) };
-    else delete state.started[id];
-    saveState();
-    render();
-    var card = document.querySelector('.point-card[data-id="' + id + '"]');
-    if (card) card.classList.add("is-open");
-  });
-
+  updateTabs();
+  updateLegend();
   render();
 })();
 
