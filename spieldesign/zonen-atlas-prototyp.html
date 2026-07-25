@@ -94,7 +94,10 @@ body {
   overflow-x: hidden;
 }
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important; transition-delay: 0ms !important; scroll-behavior: auto !important;
+  }
 }
 
 a, button { font-family: inherit; }
@@ -344,6 +347,27 @@ footer p { margin: 0; font-size: 0.78rem; color: var(--faint); max-width: 56ch; 
 .capsule__detail { margin-top: 0.75rem; position: relative; }
 .capsule__open-btn { position: relative; background: none; border: 1px solid var(--border-strong); color: var(--brass); border-radius: 100px; padding: 0.35rem 0.8rem; font-size: 0.78rem; margin-top: 0.7rem; }
 .capsule__open-btn:hover { border-color: var(--brass); }
+
+/* ---------- Motion orchestration ---------- */
+@keyframes revealIn { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes viewRise { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
+@keyframes viewForward { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: none; } }
+@keyframes viewBack { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: none; } }
+@keyframes stampPop { 0% { transform: scale(.3) rotate(-20deg); opacity: 0; } 58% { transform: scale(1.2) rotate(-9deg); opacity: 1; } 100% { transform: scale(1) rotate(-8deg); opacity: 1; } }
+@keyframes badgePop { 0% { transform: scale(.5) rotate(-9deg); opacity: 0; } 60% { transform: scale(1.14) rotate(-4deg); opacity: 1; } 100% { transform: scale(1) rotate(-2.5deg); opacity: 1; } }
+@keyframes ringFlash { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--brass) 55%, transparent); } 100% { box-shadow: 0 0 0 14px color-mix(in srgb, var(--brass) 0%, transparent); } }
+
+.enter-rise { animation: viewRise 380ms cubic-bezier(.16,.8,.28,1) both; }
+.enter-forward { animation: viewForward 360ms cubic-bezier(.16,.8,.28,1) both; }
+.enter-back { animation: viewBack 360ms cubic-bezier(.16,.8,.28,1) both; }
+
+.tile, .waypoint-row, .point-card, .case-card, .capsule {
+  animation: revealIn 560ms cubic-bezier(.16,.8,.24,1) backwards;
+  animation-delay: calc(var(--i, 0) * 38ms);
+}
+.stamp-in { animation: stampPop 480ms cubic-bezier(.22,1.4,.4,1) both; }
+.badge-in { animation: badgePop 420ms cubic-bezier(.22,1.4,.4,1) both; }
+.pulse-in::before { animation: ringFlash 700ms ease-out; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -515,6 +539,8 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
   }
 
   var openSet = new Set();
+  var justTouchedId = null;
+  var lastDir = "rise";
 
   // ---------- data grouping ----------
   var byId = new Map();
@@ -590,12 +616,13 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
   function navTop(top) {
     currentTop = top;
     if (top === "atlas") view = { type: "atlas" };
+    lastDir = "rise";
     updateTabs();
     updateLegend();
     render();
     scrollToView();
   }
-  function nav(next) { view = next; render(); scrollToView(); }
+  function nav(next, dir) { view = next; lastDir = dir || "forward"; render(); scrollToView(); }
   function scrollToView() { var m = document.getElementById("view"); if (m) m.scrollIntoView({ block: "start", behavior: "auto" }); }
 
   function updateTabs() {
@@ -610,16 +637,40 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
 
   function render() {
     var el = document.getElementById("view");
+    var isAtlasRoot = currentTop === "atlas" && view.type === "atlas";
+    var html;
     if (currentTop === "atlas") {
-      if (view.type === "atlas") el.innerHTML = atlasView();
-      else if (view.type === "zone") el.innerHTML = zoneView(view.zone);
-      else el.innerHTML = waypointView(view.zone, view.sub);
+      if (view.type === "atlas") html = atlasView();
+      else if (view.type === "zone") html = zoneView(view.zone);
+      else html = waypointView(view.zone, view.sub);
     } else if (currentTop === "fallakten") {
-      el.innerHTML = fallaktenView();
+      html = fallaktenView();
     } else {
-      el.innerHTML = kapselnView();
+      html = kapselnView();
     }
+    var wrapClass = isAtlasRoot ? "" : lastDir === "forward" ? "enter-forward" : lastDir === "back" ? "enter-back" : "enter-rise";
+    el.innerHTML = wrapClass ? '<div class="' + wrapClass + '">' + html + "</div>" : html;
+    if (isAtlasRoot) enhanceAtlasEntrance();
+    justTouchedId = null;
     renderStatStrip();
+  }
+
+  function enhanceAtlasEntrance() {
+    var tiles = document.querySelectorAll(".tile");
+    tiles.forEach(function (tile, i) {
+      tile.style.setProperty("--i", i);
+      var paths = tile.querySelectorAll(".tile__contours path");
+      paths.forEach(function (path, pi) {
+        try {
+          var len = path.getTotalLength();
+          path.style.strokeDasharray = len;
+          path.style.strokeDashoffset = len;
+          path.getBoundingClientRect();
+          path.style.transition = "stroke-dashoffset 820ms cubic-bezier(.16,.8,.2,1) " + (i * 38 + pi * 90 + 120) + "ms";
+          requestAnimationFrame(function () { path.style.strokeDashoffset = "0"; });
+        } catch (e) {}
+      });
+    });
   }
 
   function renderStatStrip() {
@@ -683,12 +734,12 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
     var z = zones.get(zoneName);
     if (!z) { navTop("atlas"); return ""; }
     var subs = Array.from(z.subs.values()).sort(function (a, b) { return b.points.length - a.points.length; });
-    var rows = subs.map(function (s) {
+    var rows = subs.map(function (s, i) {
       var total = s.points.length;
       var started = touchedCount(s.points);
       var frac = started / total;
       return (
-        '<button class="waypoint-row" data-sub="' + attrSlug(s.name) + '">' +
+        '<button class="waypoint-row" data-sub="' + attrSlug(s.name) + '" style="--i:' + i + '">' +
           '<div class="waypoint-row__fogbar" style="opacity:' + fogOpacity(frac).toFixed(2) + '"></div>' +
           '<div class="waypoint-row__main"><p class="waypoint-row__name">' + esc(s.name) + "</p>" +
           '<p class="waypoint-row__meta">' + total + " Punkte &middot; " + started + " in Bewegung</p></div>" +
@@ -729,13 +780,14 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
       if (pa !== pb) return pa - pb;
       return a.id - b.id;
     });
-    var cards = pts.map(function (p) {
+    var cards = pts.map(function (p, i) {
       var isStarted = touched(p.id);
       var isOpen = openSet.has(p.id);
+      var justIn = justTouchedId === p.id;
       return (
-        '<div class="point-card' + (isStarted ? " is-started" : "") + (isOpen ? " is-open" : "") + '" data-id="' + p.id + '">' +
+        '<div class="point-card' + (isStarted ? " is-started" : "") + (isOpen ? " is-open" : "") + '" data-id="' + p.id + '" style="--i:' + i + '">' +
           '<button class="point-card__head" data-toggle="' + p.id + '">' +
-            '<span class="point-card__stamp">' + (isStarted ? STAMP_MARK : "") + "</span>" +
+            '<span class="point-card__stamp' + (justIn ? " stamp-in" : "") + '">' + (isStarted ? STAMP_MARK : "") + "</span>" +
             '<span class="point-card__body">' +
               '<span class="point-card__tags"><span class="badge-prio">' + esc(p.prio || "?") + '</span><span class="chip chip--typ">' + esc(p.typ) + '</span><span class="' + statusChipClass(p.status) + '">' + esc(p.status) + "</span></span>" +
               '<p class="point-card__punkt">' + esc(p.punkt) + "</p>" +
@@ -777,6 +829,7 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
       .sort(function (a, b) { return b.points.length - a.points.length; });
 
     var anyCard = false;
+    var cardIndex = 0;
     var clusterMarkup = clusters.map(function (c) {
       var pts = c.points.filter(function (p) {
         if (caseFilterStamp === "all") return true;
@@ -786,7 +839,7 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
       });
       if (!pts.length) return "";
       anyCard = true;
-      var cards = pts.map(caseCardMarkup).join("");
+      var cards = pts.map(function (p) { return caseCardMarkup(p, cardIndex++); }).join("");
       return (
         '<div class="cluster">' +
           '<p class="cluster__head">' + esc(c.bereich) + " &middot; " + esc(c.unterbereich) + " &middot; " + pts.length + (pts.length === 1 ? " Fall" : " Fälle") + "</p>" +
@@ -805,13 +858,14 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
     );
   }
 
-  function caseCardMarkup(p) {
+  function caseCardMarkup(p, idx) {
     var c = state.cases[p.id] || {};
     var isOpen = openSet.has(p.id);
     var isTouched = touched(p.id);
-    var stampBadge = c.stamp ? '<span class="case-stamp-badge case-stamp-badge--' + c.stamp + '">' + STAMP_LABEL[c.stamp] + "</span>" : "";
+    var justIn = justTouchedId === p.id;
+    var stampBadge = c.stamp ? '<span class="case-stamp-badge case-stamp-badge--' + c.stamp + (justIn ? " badge-in" : "") + '">' + STAMP_LABEL[c.stamp] + "</span>" : "";
     return (
-      '<div class="case-card' + (isTouched ? " is-touched" : "") + (isOpen ? " is-open" : "") + '" data-id="' + p.id + '">' +
+      '<div class="case-card' + (isTouched ? " is-touched" : "") + (isOpen ? " is-open" : "") + '" data-id="' + p.id + '" style="--i:' + (idx || 0) + '">' +
         '<button class="case-card__head" data-toggle="' + p.id + '">' +
           '<span class="case-card__main">' +
             '<span class="case-card__eyebrow"><span class="badge-prio">' + esc(p.prio || "?") + '</span> &nbsp;' + esc(p.status) + "</span><br>" +
@@ -842,7 +896,7 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
     var open = CAPSULE_POINTS.filter(function (p) { return !touched(p.id); });
     var done = CAPSULE_POINTS.filter(function (p) { return touched(p.id); });
     var ordered = open.concat(done);
-    var cards = ordered.map(capsuleMarkup).join("");
+    var cards = ordered.map(function (p, i) { return capsuleMarkup(p, i); }).join("");
     return (
       '<div class="view-head"><div><h1 class="font-display">Sprintkapseln</h1><p class="sub">' + CAPSULE_POINTS.length + ' kleine, hoch priorisierte offene Punkte (A/B). Jede Kapsel ist freiwillig nutzbar und verfällt nicht.</p></div></div>' +
       '<div class="capsule-intro">Diese Mission ist so klein, dass du sie jetzt nutzen könntest. Sie verfällt aber nicht.</div>' +
@@ -850,13 +904,14 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
     );
   }
 
-  function capsuleMarkup(p) {
+  function capsuleMarkup(p, idx) {
     var isTouched = touched(p.id);
     var isOpen = openSet.has(p.id);
+    var justIn = justTouchedId === p.id;
     return (
-      '<div class="capsule' + (isTouched ? " is-touched" : "") + (isOpen ? " is-open" : "") + '" data-id="' + p.id + '">' +
+      '<div class="capsule' + (isTouched ? " is-touched" : "") + (isOpen ? " is-open" : "") + '" data-id="' + p.id + '" style="--i:' + (idx || 0) + '">' +
         '<div class="capsule__glow"></div>' +
-        '<div class="capsule__head"><span class="badge-prio">' + esc(p.prio) + "</span>" + (isTouched ? '<span class="point-card__stamp" style="position:static;">' + STAMP_MARK + "</span>" : "") + "</div>" +
+        '<div class="capsule__head"><span class="badge-prio">' + esc(p.prio) + "</span>" + (isTouched ? '<span class="point-card__stamp' + (justIn ? " stamp-in" : "") + '" style="position:static;">' + STAMP_MARK + "</span>" : "") + "</div>" +
         '<p class="capsule__meta">' + esc(p.bereich) + "</p>" +
         '<p class="capsule__punkt">' + esc(p.punkt) + "</p>" +
         (isOpen
@@ -880,8 +935,8 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
     var crumb = e.target.closest("[data-nav]");
     if (crumb) {
       var i = parseInt(crumb.getAttribute("data-nav"), 10);
-      if (i === 0) nav({ type: "atlas" });
-      else if (i === 1) nav({ type: "zone", zone: view.zone });
+      if (i === 0) nav({ type: "atlas" }, "back");
+      else if (i === 1) nav({ type: "zone", zone: view.zone }, "back");
       return;
     }
 
@@ -903,7 +958,9 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
       var parts = stampBtn.getAttribute("data-stamp").split(":");
       var pid = parts[0], type = parts[1];
       if (!state.cases[pid]) state.cases[pid] = {};
-      state.cases[pid].stamp = state.cases[pid].stamp === type ? null : type;
+      var newStamp = state.cases[pid].stamp === type ? null : type;
+      state.cases[pid].stamp = newStamp;
+      if (newStamp) justTouchedId = parseInt(pid, 10);
       saveState();
       openSet.add(parseInt(pid, 10));
       render();
@@ -935,8 +992,12 @@ const MATRIX = [{"id": 1, "prio": "A", "bereich": "Behörden & Gesundheit", "unt
 
     var id = e.target.getAttribute && e.target.getAttribute("data-started");
     if (id) {
-      if (e.target.checked) state.started[id] = { at: formatDate(new Date()) };
-      else delete state.started[id];
+      if (e.target.checked) {
+        state.started[id] = { at: formatDate(new Date()) };
+        justTouchedId = parseInt(id, 10);
+      } else {
+        delete state.started[id];
+      }
       saveState();
       openSet.add(parseInt(id, 10));
       render();
