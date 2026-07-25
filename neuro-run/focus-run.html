@@ -69,6 +69,53 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
 .class-hint.c1 { color:var(--cyan-strong); }
 .class-hint.c2 { color:var(--amber); }
 .class-hint.c3 { color:var(--magenta-strong); }
+
+/* ---------- Stage 2: icon buttons, settings, loot, boss, metropolis ---------- */
+.icon-btn {
+  pointer-events:auto; width:36px; height:36px; border-radius:10px; border:1px solid var(--border-strong);
+  background:var(--panel); color:var(--muted); display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.icon-btn:hover { color:var(--cyan-strong); border-color:var(--cyan); }
+.icon-btn svg { width:17px; height:17px; }
+.hud-actions { position:absolute; top:14px; right:150px; display:flex; gap:0.5rem; pointer-events:none; }
+.hud-actions .icon-btn { pointer-events:auto; }
+
+.loot-strip { position:absolute; left:18px; bottom:56px; display:flex; gap:0.5rem; pointer-events:none; }
+.loot-chip { font-family:'IBM Plex Mono'; font-size:0.7rem; padding:0.3rem 0.6rem; border-radius:8px; background:var(--panel); border:1px solid var(--border); color:var(--muted); }
+.loot-chip b { color:var(--ink); }
+.loot-chip.common b { color:var(--muted); }
+.loot-chip.rare b { color:var(--cyan-strong); }
+.loot-chip.legendary b { color:var(--amber); }
+
+.panel-list { display:flex; flex-direction:column; gap:0.6rem; margin-bottom:1rem; }
+.toggle-row { display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.8rem; border:1px solid var(--border); border-radius:8px; background:rgba(234,246,255,0.03); }
+.toggle-row span { font-size:0.88rem; }
+.toggle-row small { display:block; color:var(--faint); font-size:0.72rem; margin-top:0.1rem; }
+.switch { position:relative; width:40px; height:22px; flex:none; }
+.switch input { opacity:0; width:100%; height:100%; margin:0; cursor:pointer; position:absolute; z-index:1; }
+.switch .track { position:absolute; inset:0; border-radius:100px; background:rgba(234,246,255,0.12); border:1px solid var(--border-strong); transition:background 160ms; }
+.switch .knob { position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:var(--muted); transition:transform 160ms, background 160ms; }
+.switch input:checked ~ .track { background:rgba(47,227,255,0.25); border-color:var(--cyan); }
+.switch input:checked ~ .knob { transform:translateX(18px); background:var(--cyan-strong); }
+
+.boss-hud { position:absolute; top:70px; left:50%; transform:translateX(-50%); text-align:center; pointer-events:none; }
+.boss-hud .name { font-family:'IBM Plex Mono'; font-weight:700; color:var(--magenta-strong); font-size:0.95rem; letter-spacing:0.05em; text-transform:uppercase; }
+.boss-drain { font-family:'IBM Plex Mono'; font-size:0.72rem; color:var(--muted); }
+.boss-action { position:absolute; bottom:90px; left:50%; transform:translateX(-50%); pointer-events:auto; }
+
+.camera-panel { text-align:center; }
+.camera-panel video, .camera-panel canvas { width:100%; max-width:320px; border-radius:10px; border:1px solid var(--border-strong); margin-bottom:0.9rem; background:#000; }
+.camera-hint { font-size:0.8rem; color:var(--muted); margin-bottom:0.9rem; }
+
+.metro-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-bottom:1rem; }
+.metro-building { border:1px solid var(--border-strong); border-radius:10px; padding:0.9rem; background:rgba(234,246,255,0.03); }
+.metro-building.is-built { border-color:var(--cyan); background:rgba(47,227,255,0.08); }
+.metro-building h3 { font-family:'IBM Plex Mono'; font-size:0.85rem; margin:0 0 0.3rem; color:var(--ink); }
+.metro-building p { font-size:0.76rem; color:var(--muted); margin:0 0 0.6rem; }
+.metro-building .cost { font-family:'IBM Plex Mono'; font-size:0.7rem; color:var(--amber); }
+.metro-building button { margin-top:0.6rem; width:100%; padding:0.45rem; border-radius:6px; border:1px solid var(--border-strong); background:none; color:var(--ink); font-size:0.78rem; cursor:pointer; }
+.metro-building button:disabled { opacity:0.4; cursor:not-allowed; }
+.metro-building button:not(:disabled):hover { border-color:var(--cyan); color:var(--cyan-strong); }
 </style>
 
 <div id="stage">
@@ -87,10 +134,26 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
         <div class="combo mono" id="comboLabel">x1</div>
       </div>
     </div>
+    <div class="hud-actions">
+      <button class="icon-btn" id="metroBtn" title="Metropolis" aria-label="Metropolis öffnen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20V9l4-3 4 3v11M12 20V6l4-3 4 3v14"/><path d="M4 20h16"/></svg>
+      </button>
+      <button class="icon-btn" id="settingsBtn" title="Einstellungen" aria-label="Einstellungen öffnen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.6 7.6 0 000-2l2-1.5-2-3.4-2.4 1a7.7 7.7 0 00-1.7-1L15 3h-4l-.3 2.6a7.7 7.7 0 00-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 000 2l-2 1.5 2 3.4 2.4-1a7.7 7.7 0 001.7 1L11 21h4l.3-2.6a7.7 7.7 0 001.7-1l2.4 1 2-3.4-2-1.5z"/></svg>
+      </button>
+    </div>
+    <div class="loot-strip" id="lootStrip"></div>
     <div class="hud-bottom">
       <div class="control-hint" id="controlHint">Steuerung: Gerät neigen · Maus bewegen · <kbd>&larr;</kbd>/<kbd>&rarr;</kbd></div>
     </div>
     <div class="toast" id="toast"></div>
+    <div class="boss-hud" id="bossHud" hidden>
+      <p class="name">Apex-Metamorphose</p>
+      <p class="boss-drain mono" id="bossDrain">entzieht Plasma…</p>
+    </div>
+    <div class="boss-action" id="bossAction" hidden>
+      <button class="btn" id="bossVerifyBtn" style="width:auto; padding:0.7rem 1.2rem;">Boss-Schwachstelle: Real validieren</button>
+    </div>
   </div>
 
   <div class="overlay" id="startOverlay">
@@ -118,6 +181,39 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
       <button class="btn" id="erledigtBtn">ERLEDIGT</button>
     </div>
   </div>
+
+  <div class="overlay" id="cameraOverlay" hidden>
+    <div class="card camera-panel">
+      <p class="eyebrow">Boss-Schwachstelle</p>
+      <h1>Reale Validierung</h1>
+      <p class="camera-hint">Mache ein Foto deines Arbeitsplatzes oder eines Dokuments, um den Weg freizusprengen. (Heuristische Foto-Bestätigung, keine echte KI-Bewertung des Inhalts — siehe Fähigkeits-Bilanz.)</p>
+      <video id="camVideo" autoplay playsinline hidden></video>
+      <canvas id="camCanvas" hidden></canvas>
+      <button class="btn" id="camStartBtn">Kamera starten</button>
+      <button class="btn" id="camCaptureBtn" hidden>Foto aufnehmen</button>
+      <button class="btn secondary" id="camManualBtn">Kamera nicht verfügbar — manuell bestätigen</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="settingsOverlay" hidden>
+    <div class="card">
+      <p class="eyebrow">Einstellungen</p>
+      <h1>Mechanik-Schalter</h1>
+      <p>Jede Eskalationsmechanik ist einzeln abschaltbar (Kill-Switch pro Phase-2-System).</p>
+      <div class="panel-list" id="togglesList"></div>
+      <button class="btn secondary" id="closeSettingsBtn">Schließen</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="metroOverlay" hidden>
+    <div class="card" style="width:min(560px,100%)">
+      <p class="eyebrow">Metropolis-Metagame</p>
+      <h1>Cyber-Metropole</h1>
+      <p>Legendäre Blueprints aus Boss-Kämpfen schalten Gebäude frei. <span id="blueprintCount" class="mono"></span></p>
+      <div class="metro-grid" id="metroGrid"></div>
+      <button class="btn secondary" id="closeMetroBtn">Schließen</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -130,14 +226,23 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
   function rand(){ seed = (seed*9301+49297)%233280; return seed/233280; }
 
   // ---------- persistence ----------
-  var STORAGE_KEY = 'neuroRun.focusRun.v1';
+  var STORAGE_KEY = 'neuroRun.focusRun.v2';
   var save = {};
   try { save = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch(e){}
-  var taskQueue = save.taskQueue || [];
+  var nextTaskId = save.nextTaskId || 1;
+  var taskQueue = (save.taskQueue || []).map(function(t){
+    return typeof t === 'string' ? {id: nextTaskId++, text:t, cls:1, enteredAt:Date.now(), apexResolved:true} : t;
+  });
   var bestScore = save.bestScore || 0;
+  var loot = save.loot || {common:0, rare:0, legendary:0};
+  var metro = save.metro || {forschung:false, hafen:false};
+  var settings = Object.assign({adaptiveEngine:true, bossFights:true, rarityLoot:true, metropolis:true}, save.settings || {});
+  var APEX_THRESHOLD_MS = parseInt(new URLSearchParams(location.search).get('apexMs'),10) || 60000;
 
   function persist(){
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({taskQueue: taskQueue.slice(-20), bestScore: bestScore})); } catch(e){}
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      taskQueue: taskQueue.slice(-30), bestScore: bestScore, loot: loot, metro: metro, settings: settings, nextTaskId: nextTaskId
+    })); } catch(e){}
   }
 
   // ---------- task classifier ----------
@@ -241,6 +346,66 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
   var nextSpawnAt = 1.2;
   var runClock = 0;
   var particles = [];
+  var activeBoss = null; // {task}
+  var camStream = null;
+
+  function startBoss(task){
+    activeBoss = {task: task};
+    document.getElementById('bossHud').removeAttribute('hidden');
+    document.getElementById('bossAction').removeAttribute('hidden');
+    showToast('Apex-Metamorphose: Weg blockiert', false);
+  }
+
+  function resolveBoss(){
+    if (!activeBoss) return;
+    activeBoss.task.apexResolved = true;
+    if (settings.rarityLoot) loot.legendary++;
+    persist();
+    var p = project(0, 0.05, true);
+    spawnParticles(p.x, p.y, '47,227,255', 60);
+    spawnParticles(p.x, p.y, '255,45,107', 30);
+    sfxRefuel();
+    showToast('Boss zerstört \u00b7 Legendary Metropolis-Blueprint erhalten', true);
+    document.getElementById('bossHud').setAttribute('hidden','');
+    document.getElementById('bossAction').setAttribute('hidden','');
+    document.getElementById('cameraOverlay').setAttribute('hidden','');
+    stopCamera();
+    activeBoss = null;
+    invulnUntil = runClock + 1.5;
+    renderLoot(); renderMetro();
+  }
+
+  function stopCamera(){
+    if (camStream){ camStream.getTracks().forEach(function(t){t.stop();}); camStream = null; }
+    document.getElementById('camVideo').setAttribute('hidden','');
+    document.getElementById('camCaptureBtn').setAttribute('hidden','');
+    document.getElementById('camStartBtn').removeAttribute('hidden');
+  }
+
+  document.getElementById('bossVerifyBtn').addEventListener('click', function(){
+    document.getElementById('cameraOverlay').removeAttribute('hidden');
+  });
+  document.getElementById('camStartBtn').addEventListener('click', function(){
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ resolveBoss(); return; }
+    navigator.mediaDevices.getUserMedia({video:true}).then(function(stream){
+      camStream = stream;
+      var v = document.getElementById('camVideo');
+      v.srcObject = stream; v.removeAttribute('hidden');
+      document.getElementById('camStartBtn').setAttribute('hidden','');
+      document.getElementById('camCaptureBtn').removeAttribute('hidden');
+    }).catch(function(){
+      showToast('Kamera nicht verfügbar \u2014 manuell bestätigen', false);
+    });
+  });
+  document.getElementById('camCaptureBtn').addEventListener('click', function(){
+    var v = document.getElementById('camVideo'), c = document.getElementById('camCanvas');
+    c.width = v.videoWidth||320; c.height = v.videoHeight||240;
+    var cctx = c.getContext('2d');
+    cctx.drawImage(v,0,0,c.width,c.height);
+    c.removeAttribute('hidden'); v.setAttribute('hidden','');
+    setTimeout(resolveBoss, 500);
+  });
+  document.getElementById('camManualBtn').addEventListener('click', resolveBoss);
 
   function resetRun(){
     plasma = plasmaMax; elements = []; nextSpawnAt = 1.0; runClock = 0; invulnUntil = 1.2;
@@ -280,10 +445,34 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
   function spawnGatePair(){
     var blueSide = rand() < 0.5 ? -1 : 1;
     var offset = 0.5;
-    var task = taskQueue.length ? taskQueue[Math.floor(rand()*taskQueue.length)] : 'Fokus-Ziel';
+    var open = taskQueue.filter(function(t){ return t.cls < 3 || t.apexResolved; });
+    var task = open.length ? open[Math.floor(rand()*open.length)].text : 'Fokus-Ziel';
     var dist = DISTRACTIONS[Math.floor(rand()*DISTRACTIONS.length)];
-    elements.push({type:'gate', kind:'blue', z:1, worldX: blueSide*offset, label:task, resolved:false});
-    elements.push({type:'gate', kind:'red', z:1, worldX: -blueSide*offset, label:dist, resolved:false});
+    var tol = currentTolerance();
+    elements.push({type:'gate', kind:'blue', z:1, worldX: blueSide*offset, label:task, resolved:false, tol:tol});
+    elements.push({type:'gate', kind:'red', z:1, worldX: -blueSide*offset, label:dist, resolved:false, tol:tol});
+  }
+
+  // ---------- adaptive engine ----------
+  var outcomeHistory = []; // 1 = blue hit, -1 = red hit, 0 = miss
+  function recordOutcome(v){
+    outcomeHistory.push(v);
+    if (outcomeHistory.length > 8) outcomeHistory.shift();
+  }
+  function skillLevel(){
+    if (!settings.adaptiveEngine || !outcomeHistory.length) return 0;
+    var sum = outcomeHistory.reduce(function(a,b){return a+b;},0);
+    return clamp(sum / outcomeHistory.length, -1, 1);
+  }
+  function currentSpawnInterval(){
+    var base = 2.6;
+    if (!settings.adaptiveEngine) return base;
+    return clamp(base - skillLevel()*0.9, 1.5, 3.3);
+  }
+  function currentTolerance(){
+    var base = 0.26;
+    if (!settings.adaptiveEngine) return base;
+    return clamp(base - skillLevel()*0.06, 0.17, 0.30);
   }
 
   function enterHangar(){
@@ -298,13 +487,18 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
     var cls = classify(text);
     plasma = Math.min(plasmaMax, plasma + CLASS_GAIN[cls]);
     plasmaMax = Math.max(plasmaMax, plasma);
-    taskQueue.push(text);
+    taskQueue.push({id: nextTaskId++, text:text, cls:cls, enteredAt:Date.now(), apexResolved: cls < 3 ? true : false});
+    if (settings.rarityLoot){
+      if (cls===1) loot.common++; else if (cls===2) loot.rare++; else loot.legendary++;
+    }
     persist();
     document.getElementById('hangarOverlay').setAttribute('hidden','');
     state = 'run';
     invulnUntil = runClock + 1.2;
     sfxRefuel();
-    showToast('+' + CLASS_GAIN[cls] + 's Plasma \u00b7 ' + CLASS_LABEL[cls] + ' \u00b7 Loot: ' + CLASS_LOOT[cls], true);
+    var lootTxt = settings.rarityLoot ? (' \u00b7 Loot: ' + CLASS_LOOT[cls]) : '';
+    showToast('+' + CLASS_GAIN[cls] + 's Plasma \u00b7 ' + CLASS_LABEL[cls] + lootTxt, true);
+    renderLoot(); renderMetro();
   }
 
   document.querySelectorAll('.quick').forEach(function(btn){
@@ -326,6 +520,70 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
     if (!v) return;
     refuel(v);
   });
+
+  // ---------- loot HUD ----------
+  function renderLoot(){
+    var el = document.getElementById('lootStrip');
+    if (!settings.rarityLoot){ el.innerHTML=''; return; }
+    el.innerHTML =
+      '<span class="loot-chip common">Common <b>'+loot.common+'</b></span>' +
+      '<span class="loot-chip rare">Rare <b>'+loot.rare+'</b></span>' +
+      '<span class="loot-chip legendary">Legendary <b>'+loot.legendary+'</b></span>';
+  }
+
+  // ---------- Metropolis meta-screen ----------
+  var METRO_BUILDINGS = [
+    {key:'forschung', name:'Forschungsakademie', cost:1, desc:'Schaltet Unteraufgaben-Zerlegung für komplexe Apex-Tasks frei.'},
+    {key:'hafen', name:'Logistik-Hafen', cost:1, desc:'Schaltet das Dopamin-Menü frei: Gold gegen selbstdefinierte reale Belohnungen.'}
+  ];
+  function renderMetro(){
+    document.getElementById('blueprintCount').textContent = 'Blueprints: ' + loot.legendary;
+    var grid = document.getElementById('metroGrid');
+    grid.innerHTML = METRO_BUILDINGS.map(function(b){
+      var built = metro[b.key];
+      return '<div class="metro-building'+(built?' is-built':'')+'">'+
+        '<h3>'+b.name+'</h3><p>'+b.desc+'</p>'+
+        (built ? '<div class="cost">Errichtet</div>' : '<div class="cost">Kosten: '+b.cost+' Legendary</div>'+
+          '<button data-build="'+b.key+'" '+(loot.legendary<b.cost?'disabled':'')+'>Errichten</button>') +
+      '</div>';
+    }).join('');
+    grid.querySelectorAll('[data-build]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var key = btn.getAttribute('data-build');
+        var b = METRO_BUILDINGS.find(function(x){return x.key===key;});
+        if (loot.legendary < b.cost || metro[key]) return;
+        loot.legendary -= b.cost; metro[key] = true;
+        persist(); renderLoot(); renderMetro();
+        showToast(b.name + ' errichtet', true);
+      });
+    });
+  }
+  document.getElementById('metroBtn').addEventListener('click', function(){ renderMetro(); document.getElementById('metroOverlay').removeAttribute('hidden'); });
+  document.getElementById('closeMetroBtn').addEventListener('click', function(){ document.getElementById('metroOverlay').setAttribute('hidden',''); });
+
+  // ---------- settings panel ----------
+  var SETTING_DEFS = [
+    {key:'adaptiveEngine', name:'Adaptive Engine', desc:'Passt Tor-Tempo & Toleranz an deine letzten Treffer an.'},
+    {key:'bossFights', name:'Boss-Fights (Apex-Metamorphose)', desc:'Blockiert den Lauf, wenn eine Apex-Aufgabe zu lange offen bleibt.'},
+    {key:'rarityLoot', name:'Rarity-Loot', desc:'Common/Rare/Legendary-Beute pro Aufgabenklasse.'},
+    {key:'metropolis', name:'Metropolis-Metagame', desc:'Gebäude aus Legendary-Blueprints errichten.'}
+  ];
+  function renderSettings(){
+    document.getElementById('togglesList').innerHTML = SETTING_DEFS.map(function(s){
+      return '<div class="toggle-row"><span>'+s.name+'<small>'+s.desc+'</small></span>' +
+        '<label class="switch"><input type="checkbox" data-setting="'+s.key+'" '+(settings[s.key]?'checked':'')+'>' +
+        '<span class="track"></span><span class="knob"></span></label></div>';
+    }).join('');
+    document.getElementById('togglesList').querySelectorAll('[data-setting]').forEach(function(cb){
+      cb.addEventListener('change', function(){
+        settings[cb.getAttribute('data-setting')] = cb.checked;
+        persist(); renderLoot();
+        document.getElementById('metroBtn').style.display = settings.metropolis ? '' : 'none';
+      });
+    });
+  }
+  document.getElementById('settingsBtn').addEventListener('click', function(){ renderSettings(); document.getElementById('settingsOverlay').removeAttribute('hidden'); });
+  document.getElementById('closeSettingsBtn').addEventListener('click', function(){ document.getElementById('settingsOverlay').setAttribute('hidden',''); });
 
   // ---------- projection ----------
   var FOCAL = 0.9;
@@ -354,13 +612,19 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
 
     tunnelPhase += dt;
     nextSpawnAt -= dt;
-    if (nextSpawnAt <= 0){
-      if (elements.length < 2) spawnGatePair(); else spawnGatePair();
-      nextSpawnAt = 2.6 + rand()*1.0;
+    if (nextSpawnAt <= 0 && state === 'run' && !activeBoss){
+      spawnGatePair();
+      nextSpawnAt = currentSpawnInterval();
+    }
+
+    if (settings.bossFights && !activeBoss){
+      var apex = taskQueue.find(function(t){ return t.cls === 3 && !t.apexResolved && (Date.now()-t.enteredAt) > APEX_THRESHOLD_MS; });
+      if (apex) startBoss(apex);
     }
 
     var paused = runClock < plasmaPauseUntil;
-    if (!paused) plasma -= dt;
+    var drainRate = activeBoss ? 2.2 : 1;
+    if (!paused) plasma -= dt*drainRate;
     if (plasma <= 0){ plasma = 0; enterHangar(); return; }
 
     for (var i=elements.length-1;i>=0;i--){
@@ -377,7 +641,7 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
       } else if (el.type === 'gate'){
         if (el.z <= 0.04 && !el.resolved && runClock > invulnUntil){
           var dist = Math.abs(shipX - el.worldX);
-          if (dist < 0.26){
+          if (dist < (el.tol||0.26)){
             el.resolved = true;
             var p = project(el.worldX, 0.04, true);
             if (el.kind === 'blue'){
@@ -388,6 +652,7 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
               showToast(el.label, true);
               document.getElementById('comboLabel').textContent = 'x'+combo;
               document.getElementById('comboLabel').classList.add('show');
+              recordOutcome(1);
             } else {
               combo = 1;
               plasma = Math.max(0, plasma-4);
@@ -395,10 +660,12 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
               sfxFail(); flashFail();
               showToast('Ablenkung absorbiert Energie', false);
               document.getElementById('comboLabel').classList.remove('show');
+              recordOutcome(-1);
             }
           }
         } else if (el.z <= -0.1 && !el.resolved){
           el.resolved = true;
+          if (el.kind === 'blue') recordOutcome(0);
         }
       }
     }
@@ -414,6 +681,7 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
     document.getElementById('plasmaFill').style.width = clamp(plasma/plasmaMax,0,1)*100 + '%';
     document.getElementById('plasmaFill').classList.toggle('is-paused', runClock < plasmaPauseUntil);
     document.getElementById('plasmaSecs').textContent = plasma.toFixed(1)+'s';
+    if (activeBoss) document.getElementById('bossDrain').textContent = '"' + activeBoss.task.text + '" \u00b7 entzieht Plasma (2x)';
   }
 
   function render(dt){
@@ -471,6 +739,28 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
       }
     });
 
+    // boss
+    if (activeBoss){
+      var bp = project(0, 0.1, true);
+      var brad = Math.min(w,h)*0.34;
+      ctx.save();
+      ctx.translate(bp.x, bp.y);
+      ctx.rotate(tunnelPhase*0.4);
+      for (var s=0; s<6; s++){
+        ctx.rotate(Math.PI/3);
+        ctx.beginPath();
+        ctx.moveTo(0,0); ctx.lineTo(brad, brad*0.18); ctx.lineTo(brad,-brad*0.18); ctx.closePath();
+        ctx.fillStyle = 'rgba(10,4,8,0.92)';
+        ctx.strokeStyle = 'rgba(255,45,107,0.75)'; ctx.lineWidth=2;
+        ctx.shadowColor='rgba(255,45,107,0.7)'; ctx.shadowBlur=26;
+        ctx.fill(); ctx.stroke();
+      }
+      ctx.shadowBlur=0;
+      ctx.beginPath(); ctx.arc(0,0,brad*0.22,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,45,107,0.9)'; ctx.fill();
+      ctx.restore();
+    }
+
     // particles
     particles.forEach(function(pt){
       ctx.beginPath();
@@ -494,7 +784,15 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
     ctx.restore();
   }
 
+  renderLoot();
+  document.getElementById('metroBtn').style.display = settings.metropolis ? '' : 'none';
   render(0);
-  window.__NEURO_RUN_DEBUG__ = { get state(){return state;}, get plasma(){return plasma;}, get score(){return score;}, get shipX(){return shipX;}, get taskQueue(){return taskQueue;}, get elements(){return elements;} };
+  window.__NEURO_RUN_DEBUG__ = {
+    get state(){return state;}, get plasma(){return plasma;}, get score(){return score;}, get shipX(){return shipX;},
+    get taskQueue(){return taskQueue;}, get elements(){return elements;}, get activeBoss(){return activeBoss;},
+    get loot(){return loot;}, get metro(){return metro;}, get settings(){return settings;}, get skill(){return skillLevel();},
+    forceApex: function(text){ taskQueue.push({id: nextTaskId++, text:text, cls:3, enteredAt: Date.now()-APEX_THRESHOLD_MS-1000, apexResolved:false}); persist(); },
+    resolveBossNow: resolveBoss
+  };
 })();
 </script>
