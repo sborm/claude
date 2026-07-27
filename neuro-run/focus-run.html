@@ -355,14 +355,43 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
   function sfxSuccess(){ beep(660,0.12,'sine',0.14); setTimeout(function(){beep(880,0.16,'sine',0.12);},70); }
   function sfxFail(){ beep(160,0.35,'sawtooth',0.16); }
   function sfxRefuel(){ beep(220,0.4,'triangle',0.14); setTimeout(function(){beep(440,0.3,'triangle',0.12);},120); setTimeout(function(){beep(660,0.3,'triangle',0.1);},240); }
-  var beatTimer = null;
+
+  var BPM = 134;
+  var beatTimer = null, beatCount = 0;
+  var droneOsc = null, droneGain = null, shimmerGain = null;
+  function startDrone(){
+    var ac = ensureAudio(); if (!ac || droneOsc) return;
+    droneOsc = ac.createOscillator(); droneGain = ac.createGain();
+    droneOsc.type = 'sawtooth'; droneOsc.frequency.value = 55;
+    droneGain.gain.value = 0.02;
+    var filt = ac.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value = 320;
+    droneOsc.connect(filt); filt.connect(droneGain); droneGain.connect(ac.destination);
+    droneOsc.start();
+    shimmerGain = ac.createGain(); shimmerGain.gain.value = 0;
+    var sh = ac.createOscillator(); sh.type='sine'; sh.frequency.value = 1760;
+    sh.connect(shimmerGain); shimmerGain.connect(ac.destination); sh.start();
+  }
   function startBeat(){
-    var bpm = 132; var interval = 60000/bpm;
+    startDrone();
+    var interval = 60000/BPM;
     if (beatTimer) clearInterval(beatTimer);
+    beatCount = 0;
     beatTimer = setInterval(function(){
       if (state !== 'run') return;
-      beep(70,0.09,'sine',0.09);
+      var accent = beatCount % 4 === 0;
+      beep(accent?78:64, 0.1, 'sine', accent?0.11:0.07);
+      beep(1400, 0.03, 'square', overdrive?0.05:0.025);
+      var everyN = spawnEveryNBeats();
+      if (!activeBoss && beatCount % everyN === 0) spawnGatePair();
+      beatCount++;
     }, interval);
+  }
+  function spawnEveryNBeats(){
+    if (!settings.adaptiveEngine) return 4;
+    var s = skillLevel();
+    if (s > 0.5) return 3;
+    if (s < -0.4) return 5;
+    return 4;
   }
 
   // ---------- game state ----------
@@ -374,11 +403,14 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
   var tunnelPhase = 0;
   var speed = 0.34; // world z units per second
   var elements = []; // {type:'wall'|'gate', z, worldX(for gate), gapX/gapWidth(for wall), side/label/kind, resolved}
-  var nextSpawnAt = 1.2;
   var runClock = 0;
   var particles = [];
   var activeBoss = null; // {task}
   var camStream = null;
+  var errorFreeSince = 0;
+  var overdrive = false;
+  var fovBoost = 0; // 0..1, lerps toward 1 while in overdrive
+  var trailTimer = 0;
 
   function startBoss(task){
     activeBoss = {task: task};
@@ -439,7 +471,7 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
   document.getElementById('camManualBtn').addEventListener('click', resolveBoss);
 
   function resetRun(){
-    plasma = plasmaMax; elements = []; nextSpawnAt = 1.0; runClock = 0; invulnUntil = 1.2;
+    plasma = plasmaMax; elements = []; runClock = 0; invulnUntil = 1.2; errorFreeSince = 0; overdrive = false; fovBoost = 0;
     elements.push({type:'wall', z:1, gapX: (rand()<0.5?-0.55:0.55), resolved:false});
   }
 
@@ -619,10 +651,11 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
   // ---------- projection ----------
   var FOCAL = 0.9;
   function project(worldX, z, relToShip){
-    var scale = FOCAL / (FOCAL + z*2.2);
+    var spreadBoost = 1 + fovBoost*0.4;
+    var scale = FOCAL / (FOCAL + z*2.2/spreadBoost);
     var cx = innerWidth/2, cy = innerHeight*0.62;
     var dx = relToShip ? (worldX - shipX) : worldX;
-    return { x: cx + dx*scale*innerWidth*0.42, y: cy - (1-scale)*innerHeight*0.55, scale: scale };
+    return { x: cx + dx*scale*innerWidth*0.42*spreadBoost, y: cy - (1-scale)*innerHeight*0.55, scale: scale };
   }
 
   // ---------- main loop ----------
@@ -641,12 +674,18 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
     shipX += (steerTarget - shipX) * Math.min(1, dt*6);
     shipX = clamp(shipX, -1, 1);
 
-    tunnelPhase += dt;
-    nextSpawnAt -= dt;
-    if (nextSpawnAt <= 0 && state === 'run' && !activeBoss){
-      spawnGatePair();
-      nextSpawnAt = currentSpawnInterval();
+    overdrive = (runClock - errorFreeSince) > 45;
+    fovBoost += ((overdrive?1:0) - fovBoost) * Math.min(1, dt*1.4);
+    if (shimmerGain) shimmerGain.gain.value = overdrive ? 0.02 : 0;
+
+    trailTimer -= dt;
+    if (trailTimer <= 0 && state==='run'){
+      trailTimer = 0.035;
+      var sp = project(0,0,true);
+      particles.push({x:sp.x+(rand()-0.5)*10, y: innerHeight*0.9, vx:(rand()-0.5)*8, vy:70+rand()*40, life:0.5, color:'47,227,255', trail:true});
     }
+
+    tunnelPhase += dt * (overdrive ? 1.7 : 1);
 
     if (settings.bossFights && !activeBoss){
       var apex = taskQueue.find(function(t){ return t.cls === 3 && !t.apexResolved && (Date.now()-t.enteredAt) > APEX_THRESHOLD_MS; });
@@ -666,7 +705,7 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
         if (el.z <= 0.05 && !el.resolved){
           var hit = Math.abs(shipX - el.gapX) > 0.32;
           el.resolved = true;
-          if (hit){ plasma = Math.max(0, plasma-3); flashFail(); showToast('Wand touchiert', false); }
+          if (hit){ plasma = Math.max(0, plasma-3); flashFail(); showToast('Wand touchiert', false); errorFreeSince = runClock; }
           else { plasma = Math.min(plasmaMax, plasma+2); showToast('Ausgewichen!', true); }
         }
       } else if (el.type === 'gate'){
@@ -692,6 +731,7 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
               showToast('Ablenkung absorbiert Energie', false);
               document.getElementById('comboLabel').classList.remove('show');
               recordOutcome(-1);
+              errorFreeSince = runClock;
             }
           }
         } else if (el.z <= -0.1 && !el.resolved){
@@ -722,19 +762,36 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
     ctx.fillRect(0,0,w,h);
 
     // tunnel rings
-    var ringCount = 22;
+    var ringCount = 22 + Math.round(fovBoost*14);
     for (var r=ringCount; r>=0; r--){
       var z = r/ringCount;
       var wob = Math.sin(tunnelPhase*0.7 + r*0.5)*0.05;
       var p = project(wob, z, true);
-      var radius = (1-p.scale)*0; // unused
       var ringR = p.scale * Math.min(w,h) * 0.62;
-      var hue = 190 + Math.sin(r*0.4+tunnelPhase*0.3)*12;
+      var hue = 190 + Math.sin(r*0.4+tunnelPhase*0.3)*12 + fovBoost*40;
+      var sat = 95 + fovBoost*5, light = 60 + fovBoost*12;
       ctx.beginPath();
       ctx.arc(p.x, p.y, Math.max(4,ringR), 0, Math.PI*2);
-      ctx.strokeStyle = 'hsla('+hue+',95%,60%,'+(0.10+0.10*(1-z))+')';
+      ctx.strokeStyle = 'hsla('+hue+','+sat+'%,'+light+'%,'+(0.10+0.10*(1-z)+fovBoost*0.06)+')';
       ctx.lineWidth = 2;
       ctx.stroke();
+    }
+    if (fovBoost > 0.05){
+      // radiating speed streaks for the overdrive FOV-stretch feel
+      var streakN = 10;
+      ctx.save();
+      ctx.globalAlpha = fovBoost*0.5;
+      for (var si=0; si<streakN; si++){
+        var ang = (si/streakN)*Math.PI*2 + tunnelPhase*0.6;
+        var cx0 = w/2, cy0 = h*0.62;
+        var inner = 40, outer = 40 + fovBoost*Math.min(w,h)*0.55;
+        ctx.beginPath();
+        ctx.moveTo(cx0+Math.cos(ang)*inner, cy0+Math.sin(ang)*inner);
+        ctx.lineTo(cx0+Math.cos(ang)*outer, cy0+Math.sin(ang)*outer);
+        ctx.strokeStyle = 'rgba(157,243,255,0.5)'; ctx.lineWidth=1.4;
+        ctx.stroke();
+      }
+      ctx.restore();
     }
 
     // elements (far to near)
@@ -794,25 +851,54 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
 
     // particles
     particles.forEach(function(pt){
-      ctx.beginPath();
-      ctx.arc(pt.x,pt.y,3+pt.life*3,0,Math.PI*2);
-      ctx.fillStyle = 'rgba('+pt.color+','+Math.max(0,pt.life)+')';
-      ctx.fill();
+      if (pt.trail){
+        ctx.beginPath();
+        ctx.moveTo(pt.x, pt.y);
+        ctx.lineTo(pt.x - pt.vx*0.06, pt.y - pt.vy*0.06);
+        ctx.strokeStyle = 'rgba('+pt.color+','+Math.max(0,pt.life*0.7)+')';
+        ctx.lineWidth = 2.2; ctx.lineCap='round';
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.arc(pt.x,pt.y,3+pt.life*3,0,Math.PI*2);
+        ctx.fillStyle = 'rgba('+pt.color+','+Math.max(0,pt.life)+')';
+        ctx.fill();
+      }
     });
 
-    // ship
-    var shipScreenX = w/2 + shipX*0; // ship stays visually centered; steering shown via bank
+    // ship -- fluid-metal render: gradient sheen + squash/stretch on lateral acceleration
     var shipY = h*0.86;
-    var bank = clamp((steerTarget-shipX)*0.6, -0.6, 0.6);
+    var lateralV = clamp((steerTarget-shipX)*3, -1, 1);
+    var bank = clamp(lateralV*0.6, -0.6, 0.6);
+    var squash = 1 + Math.abs(lateralV)*0.16;
     ctx.save();
     ctx.translate(w/2, shipY);
     ctx.rotate(bank*0.4);
+    ctx.scale(1/squash, squash);
+    var grad = ctx.createLinearGradient(-20,-22,20,16);
+    var sweep = (Math.sin(tunnelPhase*1.6)+1)/2;
+    grad.addColorStop(Math.max(0,sweep-0.25), 'rgba(157,243,255,0.55)');
+    grad.addColorStop(clamp(sweep,0,1), 'rgba(255,255,255,0.95)');
+    grad.addColorStop(Math.min(1,sweep+0.25), 'rgba(47,227,255,0.9)');
     ctx.beginPath();
     ctx.moveTo(0,-22); ctx.lineTo(20,16); ctx.lineTo(0,7); ctx.lineTo(-20,16); ctx.closePath();
-    ctx.fillStyle = 'rgba(47,227,255,0.9)';
-    ctx.shadowColor = 'rgba(47,227,255,0.9)'; ctx.shadowBlur = 22;
+    ctx.fillStyle = grad;
+    ctx.shadowColor = overdrive ? 'rgba(157,243,255,0.95)' : 'rgba(47,227,255,0.9)';
+    ctx.shadowBlur = overdrive ? 34 : 22;
     ctx.fill();
     ctx.restore();
+
+    // overdrive HUD label
+    if (fovBoost > 0.15){
+      ctx.save();
+      ctx.globalAlpha = fovBoost;
+      ctx.font = "700 " + (18+fovBoost*6) + 'px "IBM Plex Mono"';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(157,243,255,0.9)';
+      ctx.shadowColor = 'rgba(157,243,255,0.8)'; ctx.shadowBlur = 16;
+      ctx.fillText('OVERDRIVE', w/2, h*0.16);
+      ctx.restore();
+    }
   }
 
   renderLoot();
@@ -822,7 +908,9 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
     get state(){return state;}, get plasma(){return plasma;}, get score(){return score;}, get shipX(){return shipX;},
     get taskQueue(){return taskQueue;}, get elements(){return elements;}, get activeBoss(){return activeBoss;},
     get loot(){return loot;}, get metro(){return metro;}, get settings(){return settings;}, get skill(){return skillLevel();},
+    get overdrive(){return overdrive;}, get fovBoost(){return fovBoost;}, get runClock(){return runClock;},
     forceApex: function(text){ taskQueue.push({id: nextTaskId++, text:text, cls:3, enteredAt: Date.now()-APEX_THRESHOLD_MS-1000, apexResolved:false}); persist(); },
+    forceErrorFree: function(secondsAgo){ errorFreeSince = runClock - secondsAgo; },
     resolveBossNow: resolveBoss
   };
 })();

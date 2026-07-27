@@ -1,4 +1,4 @@
-const CACHE_NAME = 'neuro-run-shell-v2';
+const CACHE_NAME = 'neuro-run-shell-v3';
 const SHELL_FILES = [
   './focus-run.html',
   './overlay.html',
