@@ -888,8 +888,8 @@ body { font-family:'Archivo','Helvetica Neue',Arial,sans-serif; color:var(--ink)
     ctx.fill();
     ctx.restore();
 
-    // overdrive HUD label
-    if (fovBoost > 0.15){
+    // overdrive HUD label (suppressed during a boss fight -- that HUD already owns this screen region)
+    if (fovBoost > 0.15 && !activeBoss){
       ctx.save();
       ctx.globalAlpha = fovBoost;
       ctx.font = "700 " + (18+fovBoost*6) + 'px "IBM Plex Mono"';
